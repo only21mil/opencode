@@ -56,6 +56,7 @@ import { sessionHandlers } from "./handlers/session"
 import { syncHandlers } from "./handlers/sync"
 import { tuiHandlers } from "./handlers/tui"
 import { workspaceHandlers } from "./handlers/workspace"
+import { V2Api, v2Handlers } from "./v2"
 import { instanceContextLayer, instanceRouterMiddleware } from "./middleware/instance-context"
 import { workspaceRouterMiddleware, workspaceRoutingLayer } from "./middleware/workspace-routing"
 import { disposeMiddleware } from "./lifecycle"
@@ -101,6 +102,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     workspaceHandlers,
   ]),
 )
+const v2ApiRoutes = HttpApiBuilder.layer(V2Api).pipe(Layer.provide(v2Handlers))
 
 const rawInstanceRoutes = Layer.mergeAll(eventRoute, ptyConnectRoute).pipe(
   Layer.provide(
@@ -110,7 +112,7 @@ const rawInstanceRoutes = Layer.mergeAll(eventRoute, ptyConnectRoute).pipe(
       .layer.pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal), Layer.provide(ServerAuthConfig.defaultLayer)),
   ),
 )
-const instanceRoutes = Layer.mergeAll(rawInstanceRoutes, instanceApiRoutes).pipe(
+const instanceRoutes = Layer.mergeAll(rawInstanceRoutes, instanceApiRoutes, v2ApiRoutes).pipe(
   Layer.provide([
     authorizationLayer.pipe(Layer.provide(ServerAuthConfig.defaultLayer)),
     workspaceRoutingLayer.pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal)),
